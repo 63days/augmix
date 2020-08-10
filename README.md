@@ -25,6 +25,12 @@ lambda: 12
   <img src='./res/img_84.png' width=400px>
 </p>
 
+## To train
+`python3 main.py`
+
+## To test
+`python3 main.py --test`
+
 ## References
 [1] [AugMix: A Simple Data Processing Method to Improve Robustness and Uncertainty(ICLR'20)](https://arxiv.org/abs/1912.02781)
 

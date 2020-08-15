@@ -48,10 +48,15 @@ lambda: 12
 </p>
 
 ## To train
-`python3 main.py`
+#### AugMix
+`python3 main.py`  
+#### AugMix without JSD loss
+`python3 main.py --wo_jsd`  
+#### No AugMix
+`python3 main.py --no_jsd`
 
 ## To test
-`python3 main.py --test`
+`python3 main.py --test --path {.ckpt file what you want to test}`
 
 ## References
 [1] [AugMix: A Simple Data Processing Method to Improve Robustness and Uncertainty(ICLR'20)](https://arxiv.org/abs/1912.02781)

@@ -58,6 +58,93 @@ lambda: 12
 ## To test
 `python3 main.py --test --path {.ckpt file what you want to test}`
 
+## Code Explanation
+* augmix.py
+```python
+class AugMixDataset(torch.utils.data.Dataset):
+    def __init__(self, dataset, preprocess, no_jsd=False):
+        super(AugMixDataset, self).__init__()
+        self.dataset = dataset
+        self.preprocess = preprocess
+        self.no_jsd = no_jsd
+        self.aug = AugMix()
+
+    def __getitem__(self, i):
+        x, y = self.dataset[i]
+        if self.no_jsd:
+            return self.preprocess(x), y
+        else:
+            aug1 = self.aug.augment_and_mix(x, self.preprocess)
+            aug2 = self.aug.augment_and_mix(x, self.preprocess)
+            return (self.preprocess(x), aug1, aug2), y
+
+    def __len__(self):
+        return len(self.dataset)
+```
+This class is dataset using AugMix method. AugMixDataset outputs 3 images(original+augmix1+augmix2). augmix1 and augmix2 is used to calculate JS-Divergence.
+```python
+class AugMix(nn.Module):
+    def __init__(self, k=3, alpha=1, severity=3):
+        super(AugMix, self).__init__()
+        self.k = k
+        self.alpha = alpha
+        self.severity = severity
+        self.dirichlet = Dirichlet(torch.full(torch.Size([k]), alpha, dtype=torch.float32))
+        self.beta = Beta(alpha, alpha)
+        self.augs = augmentations
+        self.kl = nn.KLDivLoss(reduction='batchmean')
+
+    def augment_and_mix(self, images, preprocess):
+        '''
+        Args:
+            images: PIL Image
+            preprocess: transform[ToTensor, Normalize]
+
+        Returns: AugmentAndMix Tensor
+        '''
+        mix = torch.zeros_like(preprocess(images))
+        w = self.dirichlet.sample()
+        for i in range(self.k):
+            aug = images.copy()
+            depth = np.random.randint(1, 4)
+            for _ in range(depth):
+                op = np.random.choice(self.augs)
+                aug = op(aug, 3)
+            mix = mix + w[i] * preprocess(aug)
+
+        m = self.beta.sample()
+
+        augmix = m * preprocess(images) + (1 - m) * mix
+
+        return augmix
+```
+k is length of serail connection and I set this 3. Severity is hyperparameter of how much corruption is used. augment_and_mix function is implementation of pseudocode. In outer loop, there is inner loop. Inner loop samples operator of augmentation randomly. After inner loop, original image and augmented image are mixed.
+```python
+    def jensen_shannon(self, logits_o, logits_1, logits_2):
+        p_o = F.softmax(logits_o, dim=1)
+        p_1 = F.softmax(logits_1, dim=1)
+        p_2 = F.softmax(logits_2, dim=1)
+
+        # kl(q.log(), p) -> KL(p, q)
+        M = torch.clamp((p_o + p_1 + p_2) / 3, 1e-7, 1)  # to avoid exploding
+        js = (self.kl(M.log(), p_o) + self.kl(M.log(), p_1) + self.kl(M.log(), p_2)) / 3
+        return js
+```      
+jensen_shannon function is used to calculate JS-Divergence. logits_o,1,2 is distribution of probabilities of original image, augmix1 and augmix2. The smaller JS-Divergence, the similiar the distributions.
+
+* main.py
+```python
+N = images[0].size(0)
+ori_aug1_aug2 = torch.cat(images, dim=0).cuda()
+targets = targets.cuda()
+logits = model(ori_aug1_aug2)
+logits_o, logits_1, logits_2 = torch.split(logits, N)
+
+ori_loss = F.cross_entropy(logits_o, targets)
+jsd = train_data.aug.jensen_shannon(logits_o, logits_1, logits_2)
+loss = ori_loss + 12 * jsd
+```                        
+In main.py, insert original+augmix1+augmix2 data as input of model. ori_loss is cross entropy of original image. jsd is value of JS-Divergence w.r.t original, augmix1, augmix2. In my experience, ori_loss + 12*jsd is well. 12 is hyperparameter.   
 ## References
 [1] [AugMix: A Simple Data Processing Method to Improve Robustness and Uncertainty(ICLR'20)](https://arxiv.org/abs/1912.02781)
 

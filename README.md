@@ -18,6 +18,10 @@ A cascade of successive compositions can produce images which drift far from the
 ![image](https://user-images.githubusercontent.com/37788686/90134284-e63b1800-ddab-11ea-80d9-c811d10b938f.png)
 Jensen-Shannon Divergence can be understood to measure how similar the distributions of original, augmix1 and augmix2 are.
 
+<img src="https://user-images.githubusercontent.com/37788686/100360548-6b38fd00-303c-11eb-9938-a5004670afd8.png" width="50%">
+
+P usually represents the true distribution, actual observation data.
+And Q is used as a theory, model, and approximation of P.
 
 
 ## Result

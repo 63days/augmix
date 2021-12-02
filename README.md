@@ -10,15 +10,15 @@ A novel agumentation technique to improve robustness and uncertainty.
 ![image](https://user-images.githubusercontent.com/37788686/90134412-197da700-ddac-11ea-8a63-8ba47fa178a8.png)
 
 ### Cascade of successive compositions
-![image](https://user-images.githubusercontent.com/37788686/90134623-695c6e00-ddac-11ea-82c9-271948e77a6c.png) |  
+![image](https://user-images.githubusercontent.com/37788686/90134623-695c6e00-ddac-11ea-82c9-271948e77a6c.png)   
 
-Unlike a cascade of successive compositions, AugMix produces a new image without veering too far from the original.
+Unlike a cascade of successive compositions, AugMix produces a new image not veering too far from the original.
 
 ## Pseudocode of AugMix
 ![image](https://user-images.githubusercontent.com/37788686/90134284-e63b1800-ddab-11ea-80d9-c811d10b938f.png)
 
 ## Result
-I trained CIFAR-100 with augmix and then measured mCE(mean Corruption Error) of CIFAR-100-C.
+I trained CIFAR-100 with augmix and then measured mCE(mean Corruption Error) on CIFAR-100-C.
 ```
 <Settings>
 Epochs: 100  
